@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Training Attendance System</title>
+</head>
+
+<body>
+<body>
+
+    <h1>Training Attendance System</h1>
+
+    <h2>Add Training Session</h2>
+
+    <form id="sessionForm">
+
+        <label>Session Name:</label>
+        <input type="text" id="sessionName">
+
+        <br><br>
+
+        <label>Session Date:</label>
+        <input type="date" id="sessionDate">
+
+        <br><br>
+
+        <label>Location:</label>
+        <input type="text" id="sessionLocation">
+
+        <br><br>
+
+        <button type="submit">Add Session</button>
+<h2>Training Sessions</h2>
+
+<div id="sessionList"></div>
+    </form>
+    <h2>Add Attendance Record</h2>
+
+<form id="attendanceForm">
+
+    <label>Select Training Session:</label>
+
+    <select id="attendanceSession">
+        <option value="">Select a session</option>
+    </select>
+
+    <br><br>
+
+    <label>Participant Name:</label>
+    <input type="text" id="participantName">
+
+    <br><br>
+
+    <label>Attendance Status:</label>
+
+    <select id="attendanceStatus">
+        <option value="Present">Present</option>
+        <option value="Absent">Absent</option>
+    </select>
+
+    <br><br>
+
+    <button type="submit">Add Attendance</button>
+
+</form>
+
+<h2>Attendance Records</h2>
+
+<div id="attendanceList"></div>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="app.js"></script>
+
+</body>
+</body>
+</html>
