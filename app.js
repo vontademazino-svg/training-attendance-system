@@ -102,6 +102,9 @@ if (error) {
 }
 
 alert("Attendance saved to Supabase!");
+participantName.value = "";
+attendanceStatus.value = "Present";
+sessionForm.reset();
 await loadAttendance(selectedSession);
 
     alert(
