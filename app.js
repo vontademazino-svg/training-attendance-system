@@ -105,6 +105,7 @@ alert("Attendance saved to Supabase!");
 participantName.value = "";
 attendanceStatus.value = "Present";
 sessionForm.reset();
+await loadSessions();
 await loadAttendance(selectedSession);
 
     alert(
