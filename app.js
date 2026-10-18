@@ -4,15 +4,11 @@
 // The website only knows the project URL and the anon (public) key.
 // Login is handled by Supabase Auth. All database work is done by
 // Supabase Database Functions, called by name with .rpc(...).
-// There is no SQL in this file. Page text lives in translations.js.
+// There is no SQL in this file. Page text lives in translations.js,
+// and the Supabase URL + anon key live in config.js.
 // =====================================================================
 
-const SUPABASE_URL = "https://dstzkaygqvxhzmefirdr.supabase.co";
-
-// Paste your anon / publishable key here (Supabase → Settings → API Keys).
-// Never put a secret or service_role key in this file.
-const SUPABASE_ANON_KEY = "sb_publishable_Ej4MWxE33vHvwYpdIUxUUw_u4OZnr5a";
-
+// The project URL and anon key are in config.js (loaded before this file).
 const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
 
@@ -64,6 +60,12 @@ const sessionList = byId("sessionList");
 const attendanceList = byId("attendanceList");
 const attendanceHint = byId("attendanceHint");
 
+const adminBadge = byId("adminBadge");
+const archiveArea = byId("archiveArea");
+const archiveMessage = byId("archiveMessage");
+const archivedSessionList = byId("archivedSessionList");
+const archivedAttendanceList = byId("archivedAttendanceList");
+
 
 // ---------- What the user is doing ----------
 
@@ -73,6 +75,10 @@ let selectedSessionId = null;  // session whose attendance is shown
 
 let currentSessions = [];      // last data loaded, so we can redraw it
 let currentAttendance = null;  // in another language without reloading
+let archivedSessions = null;
+let archivedAttendance = null;
+
+let isAdmin = false;           // administrators can archive, restore, delete
 
 
 // =====================================================================
@@ -116,7 +122,7 @@ function setLanguage(language) {
         button.textContent = input.type === "password" ? t("show") : t("hide");
     });
 
-    [signInMessage, signUpMessage, sessionMessage, attendanceMessage].forEach(function(message) {
+    [signInMessage, signUpMessage, sessionMessage, attendanceMessage, archiveMessage].forEach(function(message) {
         message.textContent = "";
     });
 
@@ -124,6 +130,9 @@ function setLanguage(language) {
     drawSessions();
     if (currentAttendance) {
         drawAttendance();
+    }
+    if (archivedSessions) {
+        drawArchive();
     }
 }
 
@@ -210,7 +219,15 @@ async function showScreenFor(session) {
         pendingArea.hidden = true;
         appArea.hidden = true;
         recordsArea.hidden = true;
+        archiveArea.hidden = true;
         userBar.hidden = true;
+        isAdmin = false;
+        selectedSessionId = null;
+        currentAttendance = null;
+        archivedSessions = null;
+        archivedAttendance = null;
+        attendanceList.innerHTML = "";
+        attendanceHint.hidden = false;
         return;
     }
 
@@ -227,13 +244,23 @@ async function showScreenFor(session) {
         pendingArea.hidden = false;
         appArea.hidden = true;
         recordsArea.hidden = true;
+        archiveArea.hidden = true;
+        adminBadge.hidden = true;
         return;
     }
+
+    isAdmin = profile.is_admin === true;
+    adminBadge.hidden = !isAdmin;
 
     pendingArea.hidden = true;
     appArea.hidden = false;
     recordsArea.hidden = false;
+    archiveArea.hidden = !isAdmin;
+
     loadSessions();
+    if (isAdmin) {
+        loadArchive();
+    }
 }
 
 // Sign in with email + password
@@ -364,6 +391,13 @@ function drawSessions() {
         actions.appendChild(makeButton(t("edit"), function() {
             startEditSession(session);
         }));
+        if (isAdmin) {
+            const archiveButton = makeButton(t("archive"), function() {
+                archiveSession(session);
+            });
+            archiveButton.className = "muted-button";
+            actions.appendChild(archiveButton);
+        }
 
         item.appendChild(main);
         item.appendChild(actions);
@@ -525,6 +559,13 @@ function drawAttendance() {
         actions.appendChild(makeButton(t("edit"), function() {
             startEditRecord(record);
         }));
+        if (isAdmin) {
+            const archiveButton = makeButton(t("archive"), function() {
+                archiveRecord(record);
+            });
+            archiveButton.className = "muted-button";
+            actions.appendChild(archiveButton);
+        }
 
         item.appendChild(main);
         item.appendChild(actions);
@@ -608,6 +649,246 @@ attendanceForm.addEventListener("submit", async function(event) {
 
     showMessage(attendanceMessage, wasEditing ? t("updated") : t("saved"), "success");
 });
+
+
+// =====================================================================
+// ARCHIVE — administrators only
+// The database also checks is_admin(), so these buttons are not the
+// only protection: a normal staff member would get an error.
+// =====================================================================
+
+// Archive a session (RPC: archive_training_session)
+async function archiveSession(session) {
+
+    archiveMessage.textContent = "";
+
+    const { error } = await supabaseClient.rpc("archive_training_session", {
+        p_id: session.id
+    });
+
+    if (error) {
+        showError(sessionMessage, error);
+        return;
+    }
+
+    if (editingSessionId === session.id) {
+        stopEditSession();
+    }
+
+    // If its attendance was on screen, clear it
+    if (selectedSessionId === session.id) {
+        selectedSessionId = null;
+        currentAttendance = null;
+        attendanceList.innerHTML = "";
+        attendanceHint.hidden = false;
+        stopEditRecord();
+    }
+
+    await loadSessions();
+    await loadArchive();
+    showMessage(sessionMessage, t("archivedMsg"), "success");
+}
+
+// Archive one attendance record (RPC: archive_attendance_record)
+async function archiveRecord(record) {
+
+    archiveMessage.textContent = "";
+
+    const { error } = await supabaseClient.rpc("archive_attendance_record", {
+        p_id: record.id
+    });
+
+    if (error) {
+        showError(attendanceMessage, error);
+        return;
+    }
+
+    if (editingRecordId === record.id) {
+        stopEditRecord();
+    }
+
+    await loadAttendance(selectedSessionId);
+    await loadArchive();
+    showMessage(attendanceMessage, t("archivedMsg"), "success");
+}
+
+// Read both archive lists (RPC: get_archived_sessions, get_archived_attendance)
+async function loadArchive() {
+
+    const sessionsResult = await supabaseClient.rpc("get_archived_sessions");
+    const attendanceResult = await supabaseClient.rpc("get_archived_attendance");
+
+    if (sessionsResult.error || attendanceResult.error) {
+        showError(archiveMessage, sessionsResult.error || attendanceResult.error);
+        return;
+    }
+
+    archivedSessions = sessionsResult.data;
+    archivedAttendance = attendanceResult.data;
+    drawArchive();
+}
+
+function archiveItem(titleText, subText, onRestore, onDelete) {
+
+    const item = document.createElement("div");
+    item.className = "item";
+
+    const main = document.createElement("div");
+    main.className = "item-main";
+
+    const title = document.createElement("p");
+    title.className = "item-title";
+    title.textContent = titleText;
+
+    const sub = document.createElement("p");
+    sub.className = "item-sub";
+    sub.textContent = subText;
+
+    main.appendChild(title);
+    main.appendChild(sub);
+
+    const actions = document.createElement("div");
+    actions.className = "item-actions";
+    actions.appendChild(makeButton(t("restore"), onRestore));
+
+    const deleteButton = makeButton(t("delete"), onDelete);
+    deleteButton.className = "danger";
+    actions.appendChild(deleteButton);
+
+    item.appendChild(main);
+    item.appendChild(actions);
+    return item;
+}
+
+function emptyMessage() {
+    const empty = document.createElement("p");
+    empty.className = "empty";
+    empty.textContent = t("noArchived");
+    return empty;
+}
+
+function drawArchive() {
+
+    archivedSessionList.innerHTML = "";
+    archivedAttendanceList.innerHTML = "";
+
+    if (archivedSessions.length === 0) {
+        archivedSessionList.appendChild(emptyMessage());
+    }
+
+    archivedSessions.forEach(function(session) {
+        const sub =
+            session.session_date + " · " + session.location + " · " +
+            t("recordsCount").replace("{n}", session.attendance_count) + " · " +
+            t("archivedOn") + " " + session.archived_at.slice(0, 10);
+
+        archivedSessionList.appendChild(archiveItem(
+            session.session_name,
+            sub,
+            function() { restoreSession(session); },
+            function() { deleteSession(session); }
+        ));
+    });
+
+    if (archivedAttendance.length === 0) {
+        archivedAttendanceList.appendChild(emptyMessage());
+    }
+
+    archivedAttendance.forEach(function(record) {
+        const status = record.attendance_status === "Present" ? t("present") : t("absent");
+        const sub =
+            record.session_name + " · " + record.session_date + " · " + status + " · " +
+            t("archivedOn") + " " + record.archived_at.slice(0, 10);
+
+        archivedAttendanceList.appendChild(archiveItem(
+            record.participant_name,
+            sub,
+            function() { restoreRecord(record); },
+            function() { deleteRecord(record); }
+        ));
+    });
+}
+
+// Restore (RPC: restore_training_session / restore_attendance_record)
+async function restoreSession(session) {
+
+    const { error } = await supabaseClient.rpc("restore_training_session", {
+        p_id: session.id
+    });
+
+    if (error) {
+        showError(archiveMessage, error);
+        return;
+    }
+
+    await loadSessions();
+    await loadArchive();
+    showMessage(archiveMessage, t("restoredMsg"), "success");
+}
+
+async function restoreRecord(record) {
+
+    const { error } = await supabaseClient.rpc("restore_attendance_record", {
+        p_id: record.id
+    });
+
+    if (error) {
+        showError(archiveMessage, error);
+        return;
+    }
+
+    if (selectedSessionId) {
+        await loadAttendance(selectedSessionId);
+    }
+    await loadArchive();
+    showMessage(archiveMessage, t("restoredMsg"), "success");
+}
+
+// Delete for good, after confirmation
+// (RPC: delete_training_session / delete_attendance_record)
+async function deleteSession(session) {
+
+    const question = t("confirmDeleteSession")
+        .replace("{name}", session.session_name)
+        .replace("{n}", session.attendance_count);
+
+    if (!window.confirm(question)) {
+        return;
+    }
+
+    const { error } = await supabaseClient.rpc("delete_training_session", {
+        p_id: session.id
+    });
+
+    if (error) {
+        showError(archiveMessage, error);
+        return;
+    }
+
+    await loadArchive();
+    showMessage(archiveMessage, t("deletedMsg"), "success");
+}
+
+async function deleteRecord(record) {
+
+    const question = t("confirmDeleteRecord").replace("{name}", record.participant_name);
+
+    if (!window.confirm(question)) {
+        return;
+    }
+
+    const { error } = await supabaseClient.rpc("delete_attendance_record", {
+        p_id: record.id
+    });
+
+    if (error) {
+        showError(archiveMessage, error);
+        return;
+    }
+
+    await loadArchive();
+    showMessage(archiveMessage, t("deletedMsg"), "success");
+}
 
 
 // ---------- Start ----------

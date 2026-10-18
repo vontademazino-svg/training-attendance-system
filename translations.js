@@ -67,7 +67,24 @@ const TRANSLATIONS = {
         edit: "Editar",
         saved: "Guardado.",
         updated: "Actualizado.",
-        error: "Erro"
+        error: "Erro",
+
+        adminBadge: "Admin",
+        archive: "Arquivar",
+        restore: "Restaurar",
+        delete: "Eliminar",
+        archiveTitle: "Arquivo",
+        archiveIntro: "Só os administradores vêem esta secção. Os itens arquivados saem das listas e podem ser restaurados ou eliminados permanentemente.",
+        archivedSessions: "Formações arquivadas",
+        archivedAttendance: "Presenças arquivadas",
+        noArchived: "Nada arquivado.",
+        archivedOn: "arquivado em",
+        recordsCount: "{n} presenças",
+        confirmDeleteSession: "Eliminar permanentemente a formação \"{name}\" e as suas {n} presenças? Isto não pode ser desfeito.",
+        confirmDeleteRecord: "Eliminar permanentemente a presença de {name}? Isto não pode ser desfeito.",
+        archivedMsg: "Arquivado.",
+        restoredMsg: "Restaurado.",
+        deletedMsg: "Eliminado permanentemente."
     },
 
     en: {
@@ -131,7 +148,24 @@ const TRANSLATIONS = {
         edit: "Edit",
         saved: "Saved.",
         updated: "Updated.",
-        error: "Error"
+        error: "Error",
+
+        adminBadge: "Admin",
+        archive: "Archive",
+        restore: "Restore",
+        delete: "Delete",
+        archiveTitle: "Archive",
+        archiveIntro: "Only administrators see this section. Archived items leave the lists and can be restored or permanently deleted.",
+        archivedSessions: "Archived sessions",
+        archivedAttendance: "Archived attendance",
+        noArchived: "Nothing archived.",
+        archivedOn: "archived on",
+        recordsCount: "{n} attendance records",
+        confirmDeleteSession: "Permanently delete the session \"{name}\" and its {n} attendance records? This cannot be undone.",
+        confirmDeleteRecord: "Permanently delete the attendance record of {name}? This cannot be undone.",
+        archivedMsg: "Archived.",
+        restoredMsg: "Restored.",
+        deletedMsg: "Permanently deleted."
     },
 
     zh: {
@@ -195,7 +229,24 @@ const TRANSLATIONS = {
         edit: "修改",
         saved: "已儲存。",
         updated: "已更新。",
-        error: "錯誤"
+        error: "錯誤",
+
+        adminBadge: "管理員",
+        archive: "封存",
+        restore: "還原",
+        delete: "刪除",
+        archiveTitle: "封存區",
+        archiveIntro: "僅管理員可見。封存的資料會從清單中移除，可以還原或永久刪除。",
+        archivedSessions: "已封存的培訓",
+        archivedAttendance: "已封存的出席紀錄",
+        noArchived: "沒有封存的資料。",
+        archivedOn: "封存於",
+        recordsCount: "{n} 筆出席紀錄",
+        confirmDeleteSession: "確定要永久刪除培訓「{name}」及其 {n} 筆出席紀錄嗎？此動作無法復原。",
+        confirmDeleteRecord: "確定要永久刪除 {name} 的出席紀錄嗎？此動作無法復原。",
+        archivedMsg: "已封存。",
+        restoredMsg: "已還原。",
+        deletedMsg: "已永久刪除。"
     }
 };
 

@@ -24,6 +24,7 @@
         <div class="topbar-right">
             <div class="topbar-user" id="userBar" hidden>
                 <span id="userName"></span>
+                <span class="badge" id="adminBadge" data-i18n="adminBadge" hidden>Admin</span>
                 <button type="button" class="link" id="signOutButton" data-i18n="signOut">Sair</button>
             </div>
 
@@ -173,9 +174,31 @@
 
         </section>
 
+        <!-- Archive: administrators only -->
+        <section class="archive" id="archiveArea" hidden>
+
+            <h3 data-i18n="archiveTitle">Arquivo</h3>
+            <p class="hint" data-i18n="archiveIntro">Só os administradores vêem esta secção.</p>
+            <p class="message" id="archiveMessage" role="status"></p>
+
+            <div class="archive-columns">
+                <div class="column">
+                    <h4 data-i18n="archivedSessions">Formações arquivadas</h4>
+                    <div id="archivedSessionList" class="list"></div>
+                </div>
+
+                <div class="column">
+                    <h4 data-i18n="archivedAttendance">Presenças arquivadas</h4>
+                    <div id="archivedAttendanceList" class="list"></div>
+                </div>
+            </div>
+
+        </section>
+
     </main>
 
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="config.js"></script>
     <script src="translations.js"></script>
     <script src="app.js"></script>
 
