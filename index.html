@@ -1,76 +1,181 @@
 <!DOCTYPE html>
-<html>
+<html lang="pt-MZ">
 <head>
-    <title>Training Attendance System</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Registo de Presenças · Tzu Chi Moçambique</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Libre+Baskerville:wght@400;700&family=Noto+Sans+TC:wght@400;500;700;900&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="style.css">
 </head>
 
 <body>
-<body>
 
-    <h1>Training Attendance System</h1>
+    <!-- Top bar -->
+    <header class="topbar">
+        <div class="topbar-left">
+            <span data-i18n="org">Fundação Tzu Chi Moçambique</span>
+            <span data-i18n="dept">Gestão de Informação</span>
+        </div>
 
-    <h2>Add Training Session</h2>
+        <div class="topbar-right">
+            <div class="topbar-user" id="userBar" hidden>
+                <span id="userName"></span>
+                <button type="button" class="link" id="signOutButton" data-i18n="signOut">Sair</button>
+            </div>
 
-    <form id="sessionForm">
+            <!-- Language switch -->
+            <div class="lang-switch" role="group" aria-label="Language / Língua / 語言">
+                <button type="button" data-lang="pt">PT</button>
+                <button type="button" data-lang="en">EN</button>
+                <button type="button" data-lang="zh">中文</button>
+            </div>
+        </div>
+    </header>
 
-        <label>Session Name:</label>
-        <input type="text" id="sessionName" required>
+    <main class="page">
 
-        <br><br>
+        <section class="hero">
 
-        <label>Session Date:</label>
-        <input type="date" id="sessionDate" required>
+            <!-- Left: title -->
+            <div class="hero-text">
+                <p class="kicker" data-i18n="kicker">TZU CHI MOÇAMBIQUE · GESTÃO DE INFORMAÇÃO</p>
+                <h1 data-i18n="heroTitle">Registo de Presenças</h1>
+                <p class="title-sub" data-i18n="heroSubtitle">Formações e Participantes</p>
+                <p class="intro" data-i18n="heroIntro">Registe cada formação e quem esteve presente.</p>
+            </div>
 
-        <br><br>
+            <!-- Right: card -->
+            <div class="card">
 
-        <label>Location:</label>
-        <input type="text" id="sessionLocation" required>
+                <!-- ===== Signed out: sign in / create account ===== -->
+                <div id="authArea">
 
+                    <div class="tabs">
+                        <button type="button" class="tab active" id="signInTab" data-i18n="tabSignIn">Entrar</button>
+                        <button type="button" class="tab" id="signUpTab" data-i18n="tabSignUp">Criar conta</button>
+                    </div>
 
-        <br><br>
+                    <form id="signInForm" class="panel">
+                        <h2 data-i18n="signInTitle">Entrar na conta</h2>
 
-        <button type="submit">Add Session</button>
-<h2>Training Sessions</h2>
+                        <label for="signInEmail" data-i18n="email">Email</label>
+                        <input type="email" id="signInEmail" autocomplete="email" required>
 
-<div id="sessionList"></div>
-    </form>
-    <h2>Add Attendance Record</h2>
+                        <label for="signInPassword" data-i18n="password">Senha</label>
+                        <div class="password-row">
+                            <input type="password" id="signInPassword" autocomplete="current-password" required>
+                            <button type="button" class="ghost" data-toggle="signInPassword" data-i18n="show">Mostrar</button>
+                        </div>
 
-<form id="attendanceForm">
+                        <button type="submit" class="primary" data-i18n="signInButton">Entrar</button>
+                        <p class="message" id="signInMessage" role="status"></p>
+                    </form>
 
-    <label>Select Training Session:</label>
+                    <form id="signUpForm" class="panel" hidden>
+                        <h2 data-i18n="signUpTitle">Criar conta</h2>
 
-    <select id="attendanceSession" required>
-        <option value="">Select a session</option>
-    </select>
+                        <label for="signUpName" data-i18n="displayName">Nome</label>
+                        <input type="text" id="signUpName" autocomplete="name" required>
 
-    <br><br>
+                        <label for="signUpEmail" data-i18n="email">Email</label>
+                        <input type="email" id="signUpEmail" autocomplete="email" required>
 
-    <label>Participant Name:</label>
-    <input type="text" id="participantName" required>
+                        <label for="signUpPassword" data-i18n="passwordNew">Senha (mínimo 8 caracteres)</label>
+                        <div class="password-row">
+                            <input type="password" id="signUpPassword" autocomplete="new-password" minlength="8" required>
+                            <button type="button" class="ghost" data-toggle="signUpPassword" data-i18n="show">Mostrar</button>
+                        </div>
 
-    <br><br>
+                        <button type="submit" class="primary" data-i18n="signUpButton">Enviar email de verificação</button>
+                        <p class="message" id="signUpMessage" role="status"></p>
+                    </form>
 
-    <label>Attendance Status:</label>
+                    <p class="card-note" data-i18n="authNote">Depois de verificar o email, a conta precisa de ser aprovada por um administrador.</p>
+                </div>
 
-    <select id="attendanceStatus">
-        <option value="Present">Present</option>
-        <option value="Absent">Absent</option>
-    </select>
+                <!-- ===== Signed in but not approved yet ===== -->
+                <div id="pendingArea" class="panel pending" hidden>
+                    <h2 data-i18n="pendingTitle">Conta pendente</h2>
+                    <p data-i18n="pendingText">A sua conta foi criada.</p>
+                    <button type="button" class="primary" id="checkAgainButton" data-i18n="checkAgain">Verificar novamente</button>
+                </div>
 
-    <br><br>
+                <!-- ===== Approved staff: sessions / attendance ===== -->
+                <div id="appArea" hidden>
 
-    <button type="submit">Add Attendance</button>
+                    <div class="tabs">
+                        <button type="button" class="tab active" id="sessionTab" data-i18n="tabSessions">Formações</button>
+                        <button type="button" class="tab" id="attendanceTab" data-i18n="tabAttendance">Presenças</button>
+                    </div>
 
-</form>
+                    <form id="sessionForm" class="panel">
+                        <h2 id="sessionFormTitle">Nova formação</h2>
 
-<h2>Attendance Records</h2>
+                        <label for="sessionName" data-i18n="sessionName">Nome da formação</label>
+                        <input type="text" id="sessionName" required>
 
-<div id="attendanceList"></div>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+                        <label for="sessionDate" data-i18n="date">Data</label>
+                        <input type="date" id="sessionDate" required>
+
+                        <label for="sessionLocation" data-i18n="location">Local</label>
+                        <input type="text" id="sessionLocation" required>
+
+                        <button type="submit" class="primary" id="sessionSubmit">Guardar</button>
+                        <button type="button" class="link" id="sessionCancel" data-i18n="cancelEdit" hidden>Cancelar edição</button>
+                        <p class="message" id="sessionMessage" role="status"></p>
+                    </form>
+
+                    <form id="attendanceForm" class="panel" hidden>
+                        <h2 id="attendanceFormTitle">Nova presença</h2>
+
+                        <label for="attendanceSession" data-i18n="trainingSession">Formação</label>
+                        <select id="attendanceSession" required>
+                            <option value="" data-i18n="selectSession">Escolha uma formação</option>
+                        </select>
+
+                        <label for="participantName" data-i18n="participant">Nome do participante</label>
+                        <input type="text" id="participantName" required>
+
+                        <label for="attendanceStatus" data-i18n="status">Estado</label>
+                        <select id="attendanceStatus">
+                            <option value="Present" data-i18n="present">Presente</option>
+                            <option value="Absent" data-i18n="absent">Ausente</option>
+                        </select>
+
+                        <button type="submit" class="primary" id="attendanceSubmit">Guardar</button>
+                        <button type="button" class="link" id="attendanceCancel" data-i18n="cancelEdit" hidden>Cancelar edição</button>
+                        <p class="message" id="attendanceMessage" role="status"></p>
+                    </form>
+
+                    <p class="card-note" data-i18n="appNote">Dados protegidos por login e RLS no Supabase.</p>
+                </div>
+
+            </div>
+        </section>
+
+        <!-- Saved data: approved staff only -->
+        <section class="records" id="recordsArea" hidden>
+
+            <div class="column">
+                <h3 data-i18n="listSessions">Formações</h3>
+                <div id="sessionList" class="list"></div>
+            </div>
+
+            <div class="column">
+                <h3 data-i18n="listAttendance">Presenças</h3>
+                <p class="hint" id="attendanceHint" data-i18n="attendanceHint">Escolha uma formação para ver as presenças.</p>
+                <div id="attendanceList" class="list"></div>
+            </div>
+
+        </section>
+
+    </main>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="translations.js"></script>
     <script src="app.js"></script>
 
-</body>
 </body>
 </html>
