@@ -11,7 +11,7 @@ const SUPABASE_URL = "https://dstzkaygqvxhzmefirdr.supabase.co";
 
 // Paste your anon / publishable key here (Supabase → Settings → API Keys).
 // Never put a secret or service_role key in this file.
-const SUPABASE_ANON_KEY = "PASTE_YOUR_ANON_KEY_HERE";
+const SUPABASE_ANON_KEY = "sb_publishable_Ej4MWxE33vHvwYpdIUxUUw_u4OZnr5a";
 
 const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
