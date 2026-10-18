@@ -1,13 +1,14 @@
 /* ---------- Colours and fonts ---------- */
 :root {
-    --paper: #efede8;
-    --card: #fbfbf9;
-    --ink: #17202c;
-    --ink-soft: #5b6470;
-    --gold: #a07a45;
-    --line: #d9d5cc;
-    --navy: #15243a;
-    --navy-dark: #0c1626;
+    /* Tzu Chi "blue sky, white clouds" palette */
+    --paper: #f3f6fa;      /* cloud white, a touch of blue */
+    --card: #ffffff;
+    --ink: #14243d;
+    --ink-soft: #55657a;
+    --accent: #2f6fb3;     /* sky blue */
+    --line: #d6dfea;
+    --navy: #1d3a6e;       /* uniform navy */
+    --navy-dark: #132a52;
     --present: #2f6b4f;
     --absent: #9a3b32;
     --sans: "Noto Sans TC", "Helvetica Neue", Arial, "PingFang TC", "Microsoft JhengHei", sans-serif;
@@ -48,6 +49,21 @@ body {
     font-weight: 500;
     letter-spacing: 0.06em;
     color: var(--ink-soft);
+}
+
+.topbar-left {
+    align-items: center;
+}
+
+.brand-logo {
+    height: 44px;
+    width: auto;
+    margin-right: -8px;
+}
+
+.brand-name {
+    font-weight: 700;
+    color: var(--navy);
 }
 
 .topbar-right {
@@ -134,7 +150,7 @@ body {
     font-family: var(--serif);
     font-weight: 700;
     font-size: clamp(28px, 3.4vw, 42px);
-    color: var(--gold);
+    color: var(--accent);
 }
 
 .intro {
@@ -147,9 +163,9 @@ body {
 /* ---------- Right side: card ---------- */
 .card {
     background-color: var(--card);
-    border-top: 3px solid var(--gold);
+    border-top: 3px solid var(--accent);
     padding: 8px 34px 26px;
-    box-shadow: 0 10px 30px rgba(23, 32, 44, 0.08);
+    box-shadow: 0 10px 30px rgba(29, 58, 110, 0.10);
 }
 
 .tabs {
@@ -221,7 +237,7 @@ input:focus,
 select:focus {
     outline: none;
     border-color: var(--navy);
-    box-shadow: 0 0 0 2px rgba(21, 36, 58, 0.15);
+    box-shadow: 0 0 0 2px rgba(47, 111, 179, 0.25);
 }
 
 select:disabled {
@@ -355,7 +371,7 @@ button.link {
 }
 
 .item.selected {
-    border-left-color: var(--gold);
+    border-left-color: var(--accent);
 }
 
 .item-main {
