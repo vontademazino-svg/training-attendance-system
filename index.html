@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Registo de Presenças · Tzu Chi Moçambique</title>
+    <title>Sistema de Gestão de Informação · Tzu Chi Moçambique</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Libre+Baskerville:wght@400;700&family=Noto+Sans+TC:wght@400;500;700;900&display=swap" rel="stylesheet">
@@ -24,6 +24,7 @@
         <div class="topbar-right">
             <div class="topbar-user" id="userBar" hidden>
                 <span id="userName"></span>
+                <span class="role-label" id="userRole"></span>
                 <span class="badge" id="adminBadge" data-i18n="adminBadge" hidden>Admin</span>
                 <button type="button" class="link" id="signOutButton" data-i18n="signOut">Sair</button>
             </div>
@@ -37,22 +38,30 @@
         </div>
     </header>
 
+    <!-- Main menu: only for approved staff -->
+    <nav class="mainnav" id="mainNav" hidden>
+        <button type="button" data-view="dashboard" data-i18n="navDashboard">Painel</button>
+        <button type="button" data-view="activities" data-i18n="navActivities">Actividades</button>
+        <button type="button" data-view="projects" data-i18n="navProjects">Projectos</button>
+        <button type="button" data-view="setup" data-i18n="navSetup" data-needs="setup">Configuração</button>
+        <button type="button" data-view="staff" data-i18n="navStaff" data-needs="staff">Pessoal</button>
+        <button type="button" data-view="audit" data-i18n="navAudit" data-needs="audit">Auditoria</button>
+    </nav>
+
     <main class="page">
 
-        <section class="hero">
+        <!-- ============ Signed out / pending / new password ============ -->
+        <section class="hero" id="heroArea">
 
-            <!-- Left: title -->
             <div class="hero-text">
                 <p class="kicker" data-i18n="kicker">TZU CHI MOÇAMBIQUE · GESTÃO DE INFORMAÇÃO</p>
-                <h1 data-i18n="heroTitle">Registo de Presenças</h1>
-                <p class="title-sub" data-i18n="heroSubtitle">Formações e Participantes</p>
-                <p class="intro" data-i18n="heroIntro">Registe cada formação e quem esteve presente.</p>
+                <h1 data-i18n="heroTitle">Sistema de Gestão de Informação</h1>
+                <p class="title-sub" data-i18n="heroSubtitle">Actividades, Projectos e Relatórios</p>
+                <p class="intro" data-i18n="heroIntro">Registe actividades e presenças.</p>
             </div>
 
-            <!-- Right: card -->
             <div class="card">
 
-                <!-- ===== Signed out: sign in / create account / forgot password ===== -->
                 <div id="authArea">
 
                     <div class="tabs">
@@ -96,10 +105,9 @@
                         <p class="message" id="signUpMessage" role="status"></p>
                     </form>
 
-                    <!-- Forgot password: send a reset email -->
                     <form id="forgotForm" class="panel" hidden>
                         <h2 data-i18n="forgotTitle">Recuperar a senha</h2>
-                        <p class="muted" data-i18n="forgotText">Escreva o seu email. Vamos enviar uma ligação para criar uma nova senha.</p>
+                        <p class="muted" data-i18n="forgotText">Escreva o seu email.</p>
 
                         <label for="forgotEmail" data-i18n="email">Email</label>
                         <input type="email" id="forgotEmail" autocomplete="email" required>
@@ -112,7 +120,6 @@
                     <p class="card-note" data-i18n="authNote">Depois de verificar o email, a conta precisa de ser aprovada por um administrador.</p>
                 </div>
 
-                <!-- ===== Came from the reset email: choose a new password ===== -->
                 <form id="resetForm" class="panel pending" hidden>
                     <h2 data-i18n="resetTitle">Nova senha</h2>
 
@@ -129,32 +136,114 @@
                     <p class="message" id="resetMessage" role="status"></p>
                 </form>
 
-                <!-- ===== Signed in but not approved yet ===== -->
                 <div id="pendingArea" class="panel pending" hidden>
                     <h2 data-i18n="pendingTitle">Conta pendente</h2>
                     <p data-i18n="pendingText">A sua conta foi criada.</p>
                     <button type="button" class="primary" id="checkAgainButton" data-i18n="checkAgain">Verificar novamente</button>
                 </div>
 
-                <!-- ===== Approved staff: sessions / attendance ===== -->
-                <div id="appArea" hidden>
+            </div>
+        </section>
 
+        <p class="message page-message" id="pageMessage" role="status"></p>
+
+
+        <!-- ============ 1. DASHBOARD ============ -->
+        <section class="view" id="view-dashboard" hidden>
+
+            <div class="view-head">
+                <div>
+                    <h2 class="view-title" data-i18n="dashTitle">Painel</h2>
+                    <p class="hint" data-i18n="dashIntro">Resumo das actividades registadas.</p>
+                </div>
+                <form class="filters" id="dashFilters">
+                    <label><span data-i18n="from">De</span><input type="date" id="dashFrom"></label>
+                    <label><span data-i18n="to">Até</span><input type="date" id="dashTo"></label>
+                    <label><span data-i18n="department">Departamento</span>
+                        <select id="dashDepartment"></select></label>
+                </form>
+            </div>
+
+            <div class="tiles" id="dashTiles"></div>
+
+            <div class="dash-grid">
+                <div class="panel-box">
+                    <h4 data-i18n="dashByMonth">Actividades por mês</h4>
+                    <div id="dashByMonth" class="month-chart"></div>
+                </div>
+                <div class="panel-box">
+                    <h4 data-i18n="dashByStatus">Estado das actividades</h4>
+                    <div id="dashByStatus"></div>
+                </div>
+                <div class="panel-box">
+                    <h4 data-i18n="dashByDepartment">Por departamento</h4>
+                    <div id="dashByDepartment"></div>
+                </div>
+                <div class="panel-box">
+                    <h4 data-i18n="dashByProvince">Por província</h4>
+                    <div id="dashByProvince"></div>
+                </div>
+                <div class="panel-box">
+                    <h4 data-i18n="dashByType">Por tipo de actividade</h4>
+                    <div id="dashByType"></div>
+                </div>
+                <div class="panel-box">
+                    <h4 data-i18n="dashPending">À espera de verificação ou aprovação</h4>
+                    <div id="dashPending" class="list"></div>
+                </div>
+            </div>
+        </section>
+
+
+        <!-- ============ 2. ACTIVITIES (training, distributions, ...) ============ -->
+        <section class="view" id="view-activities" hidden>
+
+            <div class="work-grid">
+
+                <!-- Left: forms -->
+                <div class="card">
                     <div class="tabs">
-                        <button type="button" class="tab active" id="sessionTab" data-i18n="tabSessions">Formações</button>
+                        <button type="button" class="tab active" id="sessionTab" data-i18n="tabSessions">Actividade</button>
                         <button type="button" class="tab" id="attendanceTab" data-i18n="tabAttendance">Presenças</button>
                     </div>
 
                     <form id="sessionForm" class="panel">
-                        <h2 id="sessionFormTitle">Nova formação</h2>
+                        <h2 id="sessionFormTitle">Nova actividade</h2>
 
-                        <label for="sessionName" data-i18n="sessionName">Nome da formação</label>
+                        <label for="sessionName" data-i18n="sessionName">Nome da actividade</label>
                         <input type="text" id="sessionName" required>
 
-                        <label for="sessionDate" data-i18n="date">Data</label>
-                        <input type="date" id="sessionDate" required>
+                        <div class="two">
+                            <div>
+                                <label for="activityType" data-i18n="activityType">Tipo</label>
+                                <select id="activityType"></select>
+                            </div>
+                            <div>
+                                <label for="sessionDate" data-i18n="date">Data</label>
+                                <input type="date" id="sessionDate" required>
+                            </div>
+                        </div>
 
-                        <label for="sessionLocation" data-i18n="location">Local</label>
-                        <input type="text" id="sessionLocation" required>
+                        <label for="activityDepartment" data-i18n="department">Departamento</label>
+                        <select id="activityDepartment"></select>
+
+                        <label for="activityProject" data-i18n="project">Projecto</label>
+                        <select id="activityProject"></select>
+
+                        <label for="activityLocation" data-i18n="locationArea">Província / distrito / comunidade</label>
+                        <select id="activityLocation"></select>
+
+                        <label for="sessionLocation" data-i18n="venue">Local exacto (escola, sala…)</label>
+                        <input type="text" id="sessionLocation">
+
+                        <label for="plannedParticipants" data-i18n="plannedParticipants">Participantes previstos</label>
+                        <input type="number" id="plannedParticipants" min="0" step="1">
+
+                        <label for="activityObjectives" data-i18n="objectives">Objectivos</label>
+                        <textarea id="activityObjectives" rows="2"></textarea>
+
+                        <label for="activityResults" data-i18n="results">Resultados</label>
+                        <textarea id="activityResults" rows="2"></textarea>
 
                         <button type="submit" class="primary" id="sessionSubmit">Guardar</button>
                         <button type="button" class="link" id="sessionCancel" data-i18n="cancelEdit" hidden>Cancelar edição</button>
@@ -164,9 +253,9 @@
                     <form id="attendanceForm" class="panel" hidden>
                         <h2 id="attendanceFormTitle">Nova presença</h2>
 
-                        <label for="attendanceSession" data-i18n="trainingSession">Formação</label>
+                        <label for="attendanceSession" data-i18n="trainingSession">Actividade</label>
                         <select id="attendanceSession" required>
-                            <option value="" data-i18n="selectSession">Escolha uma formação</option>
+                            <option value="" data-i18n="selectSession">Escolha uma actividade</option>
                         </select>
 
                         <label for="participantName" data-i18n="participant">Nome do participante</label>
@@ -186,90 +275,260 @@
                     <p class="card-note" data-i18n="appNote">Dados protegidos por login e RLS no Supabase.</p>
                 </div>
 
-            </div>
-        </section>
-
-        <!-- Saved data: approved staff only -->
-        <section class="records" id="recordsArea" hidden>
-
-            <div class="column">
-                <h3 data-i18n="listSessions">Formações</h3>
-                <div id="sessionList" class="list"></div>
-            </div>
-
-            <div class="column">
-                <h3 data-i18n="listAttendance">Presenças</h3>
-                <p class="hint" id="attendanceHint" data-i18n="attendanceHint">Escolha uma formação para ver as presenças.</p>
-                <div id="attendanceList" class="list"></div>
+                <!-- Right: list of activities -->
+                <div class="column">
+                    <h3 data-i18n="listSessions">Actividades</h3>
+                    <div class="filters">
+                        <label><span data-i18n="search">Procurar</span><input type="search" id="activitySearch"></label>
+                        <label><span data-i18n="workflow">Estado</span><select id="activityFilterStatus"></select></label>
+                        <label><span data-i18n="department">Departamento</span><select id="activityFilterDepartment"></select></label>
+                    </div>
+                    <div id="sessionList" class="list scroll-list"></div>
+                </div>
             </div>
 
-        </section>
+            <!-- The selected activity: workflow, attendance, files -->
+            <div class="detail" id="activityDetail" hidden>
 
-        <!-- Photos and documents of the selected session: approved staff only -->
-        <section class="files" id="filesArea" hidden>
+                <div class="detail-head">
+                    <div>
+                        <p class="kicker small" id="detailKicker"></p>
+                        <h2 class="view-title" id="detailTitle"></h2>
+                        <p class="item-sub" id="detailMeta"></p>
+                    </div>
+                    <span class="wf-badge" id="detailStatus"></span>
+                </div>
 
-            <h3><span data-i18n="filesTitle">Fotografias e documentos</span><span class="files-session" id="filesSessionName"></span></h3>
-            <p class="hint" id="filesHint" data-i18n="filesHint">Escolha uma formação (botão "Ver") para ver e enviar fotografias e documentos.</p>
+                <div class="detail-grid">
+                    <div class="panel-box">
+                        <h4 data-i18n="workflowTitle">Aprovação</h4>
+                        <ol class="steps" id="workflowSteps"></ol>
+                        <p class="return-note" id="returnNote" hidden></p>
+                        <div class="item-actions" id="workflowActions"></div>
+                        <p class="message" id="workflowMessage" role="status"></p>
+                    </div>
+                    <div class="panel-box">
+                        <h4 data-i18n="detailsTitle">Detalhes</h4>
+                        <dl class="facts" id="detailFacts"></dl>
+                    </div>
+                </div>
 
-            <div id="filesContent" hidden>
+                <section class="records" id="recordsArea">
+                    <div class="column">
+                        <h3 data-i18n="listAttendance">Presenças</h3>
+                        <p class="hint" id="attendanceHint" data-i18n="attendanceHint">Escolha uma actividade.</p>
+                        <div id="attendanceList" class="list"></div>
+                    </div>
 
-                <form id="uploadForm" class="upload">
-                    <label for="fileInput" class="upload-drop">
-                        <span class="upload-title" data-i18n="chooseFiles">Escolher fotografias ou documentos</span>
-                        <span class="upload-help" data-i18n="fileRules">Fotografias (JPG, PNG, WEBP) e documentos (PDF, Word, Excel, PowerPoint, TXT, CSV). Máximo 10 MB por ficheiro.</span>
-                        <span class="upload-chosen" id="chosenFiles"></span>
-                    </label>
-                    <input type="file" id="fileInput" multiple
-                           accept="image/jpeg,image/png,image/webp,image/gif,.pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,.csv">
+                    <div class="column files" id="filesArea">
+                        <h3><span data-i18n="filesTitle">Fotografias e documentos</span></h3>
+                        <p class="hint" id="filesHint" data-i18n="filesHint">Escolha uma actividade.</p>
+                        <span id="filesSessionName" hidden></span>
 
-                    <div class="upload-row">
-                        <div class="upload-caption">
-                            <label for="fileCaption" data-i18n="caption">Legenda (opcional)</label>
-                            <input type="text" id="fileCaption" maxlength="200">
+                        <div id="filesContent" hidden>
+                            <form id="uploadForm" class="upload">
+                                <label for="fileInput" class="upload-drop">
+                                    <span class="upload-title" data-i18n="chooseFiles">Escolher fotografias ou documentos</span>
+                                    <span class="upload-help" data-i18n="fileRules">Máximo 10 MB por ficheiro.</span>
+                                    <span class="upload-chosen" id="chosenFiles"></span>
+                                </label>
+                                <input type="file" id="fileInput" multiple
+                                       accept="image/jpeg,image/png,image/webp,image/gif,.pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,.csv">
+
+                                <div class="upload-row">
+                                    <div class="upload-caption">
+                                        <label for="fileCaption" data-i18n="caption">Legenda (opcional)</label>
+                                        <input type="text" id="fileCaption" maxlength="200">
+                                    </div>
+                                    <button type="submit" class="primary" id="uploadButton" data-i18n="uploadButton">Enviar</button>
+                                </div>
+                                <p class="message" id="uploadMessage" role="status"></p>
+                            </form>
+
+                            <h4 data-i18n="photos">Fotografias</h4>
+                            <div id="photoGrid" class="photo-grid"></div>
+
+                            <h4 class="spaced" data-i18n="documents">Documentos</h4>
+                            <div id="documentList" class="list"></div>
                         </div>
-                        <button type="submit" class="primary" id="uploadButton" data-i18n="uploadButton">Enviar</button>
                     </div>
-                    <p class="message" id="uploadMessage" role="status"></p>
-                </form>
-
-                <div class="files-columns">
-                    <div class="column">
-                        <h4 data-i18n="photos">Fotografias</h4>
-                        <div id="photoGrid" class="photo-grid"></div>
-                    </div>
-                    <div class="column">
-                        <h4 data-i18n="documents">Documentos</h4>
-                        <div id="documentList" class="list"></div>
-                    </div>
-                </div>
+                </section>
             </div>
 
+            <!-- Archive: administrators only -->
+            <section class="archive" id="archiveArea" hidden>
+
+                <h3 data-i18n="archiveTitle">Arquivo</h3>
+                <p class="hint" data-i18n="archiveIntro">Só os administradores vêem esta secção.</p>
+                <p class="message" id="archiveMessage" role="status"></p>
+
+                <div class="archive-columns">
+                    <div class="column">
+                        <h4 data-i18n="archivedSessions">Actividades arquivadas</h4>
+                        <div id="archivedSessionList" class="list"></div>
+                    </div>
+                    <div class="column">
+                        <h4 data-i18n="archivedAttendance">Presenças arquivadas</h4>
+                        <div id="archivedAttendanceList" class="list"></div>
+                    </div>
+                    <div class="column">
+                        <h4 data-i18n="archivedFiles">Ficheiros arquivados</h4>
+                        <div id="archivedFileList" class="list"></div>
+                    </div>
+                </div>
+            </section>
         </section>
 
-        <!-- Archive: administrators only -->
-        <section class="archive" id="archiveArea" hidden>
 
-            <h3 data-i18n="archiveTitle">Arquivo</h3>
-            <p class="hint" data-i18n="archiveIntro">Só os administradores vêem esta secção.</p>
-            <p class="message" id="archiveMessage" role="status"></p>
+        <!-- ============ 3. PROJECTS ============ -->
+        <section class="view" id="view-projects" hidden>
+            <div class="work-grid">
 
-            <div class="archive-columns">
-                <div class="column">
-                    <h4 data-i18n="archivedSessions">Formações arquivadas</h4>
-                    <div id="archivedSessionList" class="list"></div>
+                <div class="card" id="projectFormCard">
+                    <form id="projectForm" class="panel">
+                        <h2 id="projectFormTitle">Novo projecto</h2>
+
+                        <label for="projectName" data-i18n="projectName">Nome do projecto</label>
+                        <input type="text" id="projectName" required>
+
+                        <div class="two">
+                            <div>
+                                <label for="projectCode" data-i18n="projectCode">Código</label>
+                                <input type="text" id="projectCode" placeholder="PRJ-…">
+                            </div>
+                            <div>
+                                <label for="projectStatus" data-i18n="workflow">Estado</label>
+                                <select id="projectStatus"></select>
+                            </div>
+                        </div>
+
+                        <label for="projectDepartment" data-i18n="department">Departamento</label>
+                        <select id="projectDepartment"></select>
+
+                        <label for="projectLocation" data-i18n="locationArea">Província / distrito / comunidade</label>
+                        <select id="projectLocation"></select>
+
+                        <div class="two">
+                            <div>
+                                <label for="projectStart" data-i18n="startDate">Início</label>
+                                <input type="date" id="projectStart">
+                            </div>
+                            <div>
+                                <label for="projectEnd" data-i18n="endDate">Fim</label>
+                                <input type="date" id="projectEnd">
+                            </div>
+                        </div>
+
+                        <label for="projectBudget" data-i18n="budget">Orçamento (MZN)</label>
+                        <input type="number" id="projectBudget" min="0" step="0.01">
+
+                        <label for="projectResponsible" data-i18n="responsible">Responsável</label>
+                        <select id="projectResponsible"></select>
+
+                        <label for="projectDescription" data-i18n="description">Descrição</label>
+                        <textarea id="projectDescription" rows="3"></textarea>
+
+                        <button type="submit" class="primary" id="projectSubmit">Guardar</button>
+                        <button type="button" class="link" id="projectCancel" data-i18n="cancelEdit" hidden>Cancelar edição</button>
+                        <p class="message" id="projectMessage" role="status"></p>
+                    </form>
+                    <p class="card-note" id="projectNoRights" data-i18n="projectNoRights" hidden>Só chefes de departamento, liderança e a equipa de GI podem criar projectos.</p>
                 </div>
 
                 <div class="column">
-                    <h4 data-i18n="archivedAttendance">Presenças arquivadas</h4>
-                    <div id="archivedAttendanceList" class="list"></div>
-                </div>
-
-                <div class="column">
-                    <h4 data-i18n="archivedFiles">Ficheiros arquivados</h4>
-                    <div id="archivedFileList" class="list"></div>
+                    <h3 data-i18n="navProjects">Projectos</h3>
+                    <div class="filters">
+                        <label><span data-i18n="search">Procurar</span><input type="search" id="projectSearch"></label>
+                        <label><span data-i18n="workflow">Estado</span><select id="projectFilterStatus"></select></label>
+                    </div>
+                    <div id="projectList" class="list scroll-list"></div>
                 </div>
             </div>
+        </section>
 
+
+        <!-- ============ 4. SETUP: departments and locations ============ -->
+        <section class="view" id="view-setup" hidden>
+            <h2 class="view-title" data-i18n="navSetup">Configuração</h2>
+            <p class="hint" data-i18n="setupIntro">Listas partilhadas por todo o sistema.</p>
+
+            <div class="setup-grid">
+                <div>
+                    <form id="departmentForm" class="panel-box form-box">
+                        <h4 id="departmentFormTitle">Novo departamento</h4>
+                        <div class="two">
+                            <div>
+                                <label for="deptCode" data-i18n="projectCode">Código</label>
+                                <input type="text" id="deptCode" maxlength="10">
+                            </div>
+                            <div>
+                                <label class="check"><input type="checkbox" id="deptActive" checked> <span data-i18n="active">Activo</span></label>
+                            </div>
+                        </div>
+                        <label for="deptNamePt">Nome (Português)</label>
+                        <input type="text" id="deptNamePt" required>
+                        <label for="deptNameEn">Name (English)</label>
+                        <input type="text" id="deptNameEn">
+                        <label for="deptNameZh">名稱（中文）</label>
+                        <input type="text" id="deptNameZh">
+                        <button type="submit" class="primary" id="deptSubmit">Guardar</button>
+                        <button type="button" class="link" id="deptCancel" data-i18n="cancelEdit" hidden>Cancelar edição</button>
+                        <p class="message" id="deptMessage" role="status"></p>
+                    </form>
+                    <h3 data-i18n="departments">Departamentos</h3>
+                    <div id="departmentList" class="list"></div>
+                </div>
+
+                <div>
+                    <form id="locationForm" class="panel-box form-box">
+                        <h4 id="locationFormTitle">Novo local</h4>
+                        <label for="locName" data-i18n="locationName">Nome</label>
+                        <input type="text" id="locName" required>
+                        <div class="two">
+                            <div>
+                                <label for="locLevel" data-i18n="level">Nível</label>
+                                <select id="locLevel"></select>
+                            </div>
+                            <div>
+                                <label class="check"><input type="checkbox" id="locActive" checked> <span data-i18n="active">Activo</span></label>
+                            </div>
+                        </div>
+                        <label for="locParent" data-i18n="parentLocation">Pertence a</label>
+                        <select id="locParent"></select>
+                        <button type="submit" class="primary" id="locSubmit">Guardar</button>
+                        <button type="button" class="link" id="locCancel" data-i18n="cancelEdit" hidden>Cancelar edição</button>
+                        <p class="message" id="locMessage" role="status"></p>
+                    </form>
+                    <h3 data-i18n="locations">Locais</h3>
+                    <div id="locationList" class="list"></div>
+                </div>
+            </div>
+        </section>
+
+
+        <!-- ============ 5. STAFF (administrators) ============ -->
+        <section class="view" id="view-staff" hidden>
+            <h2 class="view-title" data-i18n="navStaff">Pessoal</h2>
+            <p class="hint" data-i18n="staffIntro">Aprove contas novas e defina o papel de cada pessoa.</p>
+            <p class="message" id="staffMessage" role="status"></p>
+            <div id="staffList" class="list"></div>
+            <dl class="role-help" id="roleHelp"></dl>
+        </section>
+
+
+        <!-- ============ 6. AUDIT LOG ============ -->
+        <section class="view" id="view-audit" hidden>
+            <div class="view-head">
+                <div>
+                    <h2 class="view-title" data-i18n="navAudit">Auditoria</h2>
+                    <p class="hint" data-i18n="auditIntro">Quem alterou o quê, e quando. Não pode ser alterado.</p>
+                </div>
+                <div class="filters">
+                    <label><span data-i18n="table">Tabela</span><select id="auditTable"></select></label>
+                </div>
+            </div>
+            <p class="message" id="auditMessage" role="status"></p>
+            <div id="auditList" class="list"></div>
         </section>
 
     </main>
@@ -278,6 +537,8 @@
     <script src="config.js"></script>
     <script src="translations.js"></script>
     <script src="app.js"></script>
+    <script src="activities.js"></script>
+    <script src="ims.js"></script>
 
 </body>
 </html>
