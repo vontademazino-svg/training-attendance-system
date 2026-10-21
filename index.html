@@ -52,7 +52,7 @@
             <!-- Right: card -->
             <div class="card">
 
-                <!-- ===== Signed out: sign in / create account ===== -->
+                <!-- ===== Signed out: sign in / create account / forgot password ===== -->
                 <div id="authArea">
 
                     <div class="tabs">
@@ -73,6 +73,7 @@
                         </div>
 
                         <button type="submit" class="primary" data-i18n="signInButton">Entrar</button>
+                        <button type="button" class="link" id="forgotLink" data-i18n="forgotLink">Esqueceu a senha?</button>
                         <p class="message" id="signInMessage" role="status"></p>
                     </form>
 
@@ -95,8 +96,38 @@
                         <p class="message" id="signUpMessage" role="status"></p>
                     </form>
 
+                    <!-- Forgot password: send a reset email -->
+                    <form id="forgotForm" class="panel" hidden>
+                        <h2 data-i18n="forgotTitle">Recuperar a senha</h2>
+                        <p class="muted" data-i18n="forgotText">Escreva o seu email. Vamos enviar uma ligação para criar uma nova senha.</p>
+
+                        <label for="forgotEmail" data-i18n="email">Email</label>
+                        <input type="email" id="forgotEmail" autocomplete="email" required>
+
+                        <button type="submit" class="primary" data-i18n="forgotButton">Enviar ligação</button>
+                        <button type="button" class="link" id="backToSignIn" data-i18n="backToSignIn">Voltar a entrar</button>
+                        <p class="message" id="forgotMessage" role="status"></p>
+                    </form>
+
                     <p class="card-note" data-i18n="authNote">Depois de verificar o email, a conta precisa de ser aprovada por um administrador.</p>
                 </div>
+
+                <!-- ===== Came from the reset email: choose a new password ===== -->
+                <form id="resetForm" class="panel pending" hidden>
+                    <h2 data-i18n="resetTitle">Nova senha</h2>
+
+                    <label for="resetPassword" data-i18n="passwordNew">Senha (mínimo 8 caracteres)</label>
+                    <div class="password-row">
+                        <input type="password" id="resetPassword" autocomplete="new-password" minlength="8" required>
+                        <button type="button" class="ghost" data-toggle="resetPassword" data-i18n="show">Mostrar</button>
+                    </div>
+
+                    <label for="resetPasswordAgain" data-i18n="confirmPassword">Repita a senha</label>
+                    <input type="password" id="resetPasswordAgain" autocomplete="new-password" minlength="8" required>
+
+                    <button type="submit" class="primary" data-i18n="resetButton">Guardar nova senha</button>
+                    <p class="message" id="resetMessage" role="status"></p>
+                </form>
 
                 <!-- ===== Signed in but not approved yet ===== -->
                 <div id="pendingArea" class="panel pending" hidden>
@@ -174,6 +205,47 @@
 
         </section>
 
+        <!-- Photos and documents of the selected session: approved staff only -->
+        <section class="files" id="filesArea" hidden>
+
+            <h3><span data-i18n="filesTitle">Fotografias e documentos</span><span class="files-session" id="filesSessionName"></span></h3>
+            <p class="hint" id="filesHint" data-i18n="filesHint">Escolha uma formação (botão "Ver") para ver e enviar fotografias e documentos.</p>
+
+            <div id="filesContent" hidden>
+
+                <form id="uploadForm" class="upload">
+                    <label for="fileInput" class="upload-drop">
+                        <span class="upload-title" data-i18n="chooseFiles">Escolher fotografias ou documentos</span>
+                        <span class="upload-help" data-i18n="fileRules">Fotografias (JPG, PNG, WEBP) e documentos (PDF, Word, Excel, PowerPoint, TXT, CSV). Máximo 10 MB por ficheiro.</span>
+                        <span class="upload-chosen" id="chosenFiles"></span>
+                    </label>
+                    <input type="file" id="fileInput" multiple
+                           accept="image/jpeg,image/png,image/webp,image/gif,.pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,.csv">
+
+                    <div class="upload-row">
+                        <div class="upload-caption">
+                            <label for="fileCaption" data-i18n="caption">Legenda (opcional)</label>
+                            <input type="text" id="fileCaption" maxlength="200">
+                        </div>
+                        <button type="submit" class="primary" id="uploadButton" data-i18n="uploadButton">Enviar</button>
+                    </div>
+                    <p class="message" id="uploadMessage" role="status"></p>
+                </form>
+
+                <div class="files-columns">
+                    <div class="column">
+                        <h4 data-i18n="photos">Fotografias</h4>
+                        <div id="photoGrid" class="photo-grid"></div>
+                    </div>
+                    <div class="column">
+                        <h4 data-i18n="documents">Documentos</h4>
+                        <div id="documentList" class="list"></div>
+                    </div>
+                </div>
+            </div>
+
+        </section>
+
         <!-- Archive: administrators only -->
         <section class="archive" id="archiveArea" hidden>
 
@@ -190,6 +262,11 @@
                 <div class="column">
                     <h4 data-i18n="archivedAttendance">Presenças arquivadas</h4>
                     <div id="archivedAttendanceList" class="list"></div>
+                </div>
+
+                <div class="column">
+                    <h4 data-i18n="archivedFiles">Ficheiros arquivados</h4>
+                    <div id="archivedFileList" class="list"></div>
                 </div>
             </div>
 
